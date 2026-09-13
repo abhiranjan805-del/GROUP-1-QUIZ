@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Associative Memory Networks — Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #0c1420;
+    --bg-panel: #121d2e;
+    --bg-panel-2: #16233a;
+    --line: #23364f;
+    --teal: #57e0c9;
+    --teal-dim: #2c5f57;
+    --amber: #e8b84b;
+    --red: #e2685f;
+    --text: #eaf1f5;
+    --text-dim: #93a6bb;
+    --text-faint: #5c7189;
+    --serif: 'Fraunces', serif;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    font-family: var(--sans);
+    background:
+      radial-gradient(circle at 15% 10%, #14233a 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, #142238 0%, transparent 45%),
+      var(--bg);
+    color: var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 40px 16px;
+    line-height:1.5;
+  }
+
+  .node-web{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.35;
+  }
+
+  .app{
+    position:relative; z-index:1;
+    width:100%; max-width:640px;
+  }
+
+  .credit-bar{
+    font-family: var(--mono);
+    font-size:11.5px;
+    color: var(--text-faint);
+    text-align:center;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:22px;
+    background: rgba(255,255,255,0.015);
+    line-height:1.7;
+  }
+  .credit-bar b{ color: var(--teal); font-weight:600; }
+
+  .panel{
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:36px 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+
+  /* ---- Intro screen ---- */
+  .kicker{
+    font-family: var(--mono);
+    font-size:12.5px;
+    color: var(--teal);
+    letter-spacing:0.02em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family: var(--serif);
+    font-weight:600;
+    font-size: 32px;
+    line-height:1.15;
+    margin:0 0 14px 0;
+    color:#fff;
+  }
+  .subtext{
+    color: var(--text-dim);
+    font-size:15px;
+    margin-bottom:26px;
+    max-width: 46ch;
+  }
+  .rules-list{
+    list-style:none; padding:0; margin: 0 0 28px 0;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .rules-list li{
+    display:flex; gap:10px; align-items:baseline;
+    font-size:13.5px; color: var(--text-dim);
+  }
+  .rules-list .tag{
+    font-family: var(--mono); font-size:11px; color:var(--amber);
+    border:1px solid var(--teal-dim); border-radius:5px; padding:1px 6px;
+    flex-shrink:0;
+  }
+  label.field-label{
+    display:block; font-size:13px; color: var(--text-dim); margin-bottom:8px;
+  }
+  input[type=text]{
+    width:100%;
+    background: #0a121e;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:13px 14px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size:15px;
+    outline:none;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus{ border-color: var(--teal); }
+
+  .btn{
+    font-family: var(--sans);
+    font-weight:600;
+    font-size:14.5px;
+    border:none;
+    border-radius:10px;
+    padding:13px 22px;
+    cursor:pointer;
+    transition: transform 0.1s, filter 0.15s;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn-primary{
+    background: var(--teal);
+    color: #06251f;
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-primary:disabled{
+    background: #294a48; color: #5a7d79; cursor:not-allowed;
+  }
+  .btn-ghost{
+    background:transparent; color: var(--text-dim);
+    border:1px solid var(--line);
+  }
+  .btn-ghost:hover{ color:var(--text); border-color: var(--text-faint); }
+
+  .btn-row{ display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
+
+  /* ---- Quiz screen ---- */
+  .quiz-header{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 22px;
+  }
+  .qcount{
+    font-family: var(--mono); font-size:13px; color: var(--text-faint);
+  }
+  .difficulty-pill{
+    font-family: var(--mono); font-size:11px;
+    padding: 3px 10px; border-radius:20px;
+    border:1px solid var(--teal-dim); color: var(--teal);
+  }
+  .difficulty-pill.medium{ color: var(--amber); border-color:#5f4f2c; }
+  .difficulty-pill.hard{ color: var(--red); border-color:#5f2c2c; }
+  .timer{
+    font-family: var(--mono); font-size:13px; color: var(--text-dim);
+    border:1px solid var(--line); border-radius:8px; padding:5px 11px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .timer.warn{ color: var(--amber); border-color:#5f4f2c; }
+  .timer.danger{ color: var(--red); border-color:#5f2c2c; }
+  .timer-dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
+
+  .progress-track{
+    height:3px; background: var(--line); border-radius:3px; margin-bottom:28px; overflow:hidden;
+  }
+  .progress-fill{
+    height:100%; background: var(--teal); border-radius:3px;
+    transition: width 0.25s ease;
+  }
+
+  .qtext{
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight:500;
+    line-height:1.4;
+    color:#fff;
+    margin: 0 0 22px 0;
+  }
+
+  .matrix-box{
+    background:#0a121e; border:1px solid var(--line); border-radius:10px;
+    padding:16px 20px; margin-bottom:22px;
+    font-family: var(--mono); font-size:13px; color: var(--text-dim);
+    overflow-x:auto;
+  }
+  .matrix-box table{ border-collapse:collapse; margin: 6px auto; }
+  .matrix-box td{ padding: 3px 10px; text-align:center; }
+  .matrix-box .mlabel{ color: var(--teal); margin-bottom: 6px; }
+
+  .options{ display:flex; flex-direction:column; gap:10px; margin-bottom: 8px; }
+  .option{
+    display:flex; align-items:flex-start; gap:12px;
+    background: rgba(255,255,255,0.02);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding: 13px 16px;
+    cursor:pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size:14.5px;
+  }
+  .option:hover{ border-color: var(--text-faint); }
+  .option.selected{
+    border-color: var(--teal);
+    background: rgba(87,224,201,0.07);
+  }
+  .option .marker{
+    width:18px; height:18px; border-radius:5px;
+    border:1.5px solid var(--text-faint);
+    flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; color: var(--bg);
+  }
+  .option.msq .marker{ border-radius:5px; }
+  .option:not(.msq) .marker{ border-radius:50%; }
+  .option.selected .marker{ background: var(--teal); border-color: var(--teal); color:#06251f; font-weight:700; }
+  .option-letter{ font-family: var(--mono); color: var(--text-faint); margin-right:2px; }
+
+  .msq-hint{
+    font-family: var(--mono); font-size:11.5px; color: var(--amber); margin: -12px 0 16px 0;
+  }
+
+  /* ---- Result screen ---- */
+  .score-hero{ text-align:center; margin-bottom: 6px; }
+  .score-big{
+    font-family: var(--serif); font-size:64px; font-weight:700; color:#fff;
+    line-height:1;
+  }
+  .score-of{ font-family: var(--mono); color: var(--text-faint); font-size:14px; }
+  .verdict{
+    text-align:center; margin: 18px 0 8px 0;
+    font-family: var(--sans); font-weight:600; font-size:17px;
+  }
+  .verdict.great{ color: var(--teal); }
+  .verdict.ok{ color: var(--amber); }
+  .verdict.low{ color: var(--red); }
+  .funny{
+    text-align:center; color: var(--text-dim); font-size:14px;
+    max-width:38ch; margin: 0 auto 24px auto;
+  }
+
+  /* certificate */
+  .certificate{
+    margin: 26px 0;
+    background: radial-gradient(circle at 30% 20%, #17110a, #0d0a06);
+    border: 1.5px solid var(--amber);
+    border-radius: 14px;
+    padding: 34px 28px;
+    text-align:center;
+    position:relative;
+  }
+  .certificate::before{
+    content:"";
+    position:absolute; inset:8px;
+    border: 1px solid rgba(232,184,75,0.35);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  #fxCanvas{
+    position:fixed; inset:0; z-index:999; pointer-events:none;
+  }
+  .cert-eyebrow{
+    font-family: var(--mono); font-size:11px; color: var(--amber);
+    letter-spacing: 0.15em;
+  }
+  .cert-title{
+    font-family: var(--serif); font-size:26px; color:#fdf3d8; margin: 10px 0 4px 0;
+  }
+  .cert-sub{ font-family: var(--mono); font-size:11px; color:#9c8865; margin-bottom:22px; }
+  .cert-name{
+    font-family: var(--serif); font-style:italic; font-size:30px; color: var(--amber);
+    margin: 6px 0 16px 0; border-bottom: 1px solid rgba(232,184,75,0.35); display:inline-block;
+    padding-bottom:6px;
+  }
+  .cert-body{ font-size:13.5px; color:#c9bda0; max-width:40ch; margin:0 auto 18px auto; line-height:1.6; }
+  .cert-topic{ font-family: var(--mono); font-size:11.5px; color:#e8b84b; margin-bottom: 18px; }
+  .cert-footer{
+    display:flex; justify-content:space-between; margin-top:22px;
+    font-family: var(--mono); font-size:10.5px; color:#8a7a5c;
+    border-top: 1px dashed rgba(232,184,75,0.25); padding-top:12px;
+  }
+
+  /* answer key */
+  .answer-key{ margin-top: 32px; }
+  .ak-heading{
+    font-family: var(--mono); font-size:12px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing:0.08em;
+    margin-bottom:14px; border-bottom:1px solid var(--line); padding-bottom:10px;
+  }
+  .ak-item{
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+  }
+  .ak-item:last-child{ border-bottom:none; }
+  .ak-top{ display:flex; gap:10px; align-items:baseline; margin-bottom:5px; }
+  .ak-qno{ font-family: var(--mono); color: var(--teal); font-size:13px; }
+  .ak-answer{ font-weight:600; font-size:14px; color:#fff; }
+  .ak-explain{ font-size:13px; color: var(--text-dim); line-height:1.5; }
+
+  /* celebration overlay */
+  .celebrate-layer{
+    position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden;
+  }
+  .confetto{
+    position:absolute; top:-40px; font-size:22px;
+    animation-name: fall; animation-timing-function: linear; animation-fill-mode: forwards;
+    will-change: transform;
+  }
+  @keyframes fall{
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity:1; }
+    100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--spin)); opacity:0.9; }
+  }
+
+  @media (max-width:480px){
+    .panel{ padding:26px 20px; }
+    h1{ font-size:26px; }
+    .score-big{ font-size:52px; }
+    .cert-name{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="credit-bar">
+    THIS QUIZ IS CREATED BY <b>GROUP-1</b><br>
+    Abhiranjan Kumar (23153125004) · Aman Kumar (23153125002) · Sarthak Kumar (23153125003)<br>
+    Naveen Kumar (23153125001) · Rakhi (24153125905)
+  </div>
+
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    difficulty: "easy",
+    text: "What is the fundamental difference between Traditional Computer Memory (RAM) and Associative Memory (Neural Network)?",
+    options: [
+      "Traditional memory is larger in size, while Associative memory is smaller.",
+      "Traditional memory retrieves data using exact locations/addresses, whereas Associative memory retrieves data using content or clues.",
+      "Traditional memory only stores images.",
+      "Associative memory does not require any RAM to store data."
+    ],
+    type: "single",
+    correct: [1],
+    explanation: "Traditional RAM requires exact physical memory addresses, whereas Associative memory locates data using partial content or clues."
+  },
+  {
+    difficulty: "easy",
+    text: 'If a neural network receives a "Blurry Face Image" as input and produces a "Clear Face Image" as output, which type of network is it?',
+    options: [
+      "Hetero-Associative Network",
+      "Location-Addressable Network",
+      "Auto-Associative Network",
+      "Bidirectional Associative Memory (BAM)"
+    ],
+    type: "single",
+    correct: [2],
+    explanation: "Auto-associative networks process input and output within the same domain (image-to-image) for noise reduction and pattern repair."
+  },
+  {
+    difficulty: "easy",
+    text: "In a Hopfield Network's Weight Matrix (W), what value is assigned to the diagonal elements (w_ii)?",
+    options: ["+1", "-1", "0 (to remove self-connections)", "Infinite"],
+    type: "single",
+    correct: [2],
+    explanation: "w_ii = 0 ensures no self-feedback loop exists for individual neurons."
+  },
+  {
+    difficulty: "easy",
+    text: "What is the core principle behind the Hebbian Learning Rule?",
+    options: [
+      '"Neurons that fire together, wire together"',
+      '"High energy means stable memory"',
+      '"Input dimension must always equal output dimension"',
+      '"Weights increase linearly over time"'
+    ],
+    type: "single",
+    correct: [0],
+    explanation: "Hebbian learning operates on the principle that simultaneous activation strengthens inter-neuron connections."
+  },
+  {
+    difficulty: "medium",
+    text: "If a standard Hopfield Network contains N = 200 neurons, what is the maximum number of patterns it can safely store according to the practical capacity formula (0.138 × N)?",
+    options: ["10 patterns", "27 patterns", "50 patterns", "100 patterns"],
+    type: "single",
+    correct: [1],
+    explanation: "P_max ≈ 0.138 × N ⇒ 0.138 × 200 = 27.6 ≈ 27 patterns."
+  },
+  {
+    difficulty: "medium",
+    text: "What happens to the Energy Landscape during the Pattern Recall process in a Hopfield Network?",
+    options: [
+      "The network energy continuously increases.",
+      "A noisy input starts at a High Energy state and transitions to a Low Energy state (valley) as it updates.",
+      "Energy remains constant at zero throughout the process.",
+      "A stable pattern has positive energy, while a noisy pattern has negative energy."
+    ],
+    type: "single",
+    correct: [1],
+    explanation: "Unstable/noisy patterns start at higher energy states (E > 0) and iteratively decrease toward minimum energy valleys (E_min)."
+  },
+  {
+    difficulty: "medium",
+    text: "What does Asynchronous Updating mean in the context of Hopfield Network activation dynamics?",
+    options: [
+      "All neurons update their states simultaneously.",
+      "Only one neuron updates its state at a time while all other neurons remain unchanged.",
+      "Weights change randomly over time.",
+      "The network retrieves information without training."
+    ],
+    type: "single",
+    correct: [1],
+    explanation: "Asynchronous updating modifies one neuron at a time while others remain fixed."
+  },
+  {
+    difficulty: "hard",
+    text: "Given a 4-neuron Hopfield Network with the trained Weight Matrix (W) and Corrupted Prompt Input Vector (X_prompt), calculate the net input sum for the first neuron (net₁):",
+    matrix: true,
+    options: ["+1", "+3", "-1", "0"],
+    type: "single",
+    correct: [0],
+    explanation: "net₁ = (1×0) + (−1×1) + (−1×−1) + (−1×−1) = 0 − 1 + 1 + 1 = +1."
+  },
+  {
+    difficulty: "hard",
+    text: "What mathematical condition must be satisfied between stored patterns to eliminate or minimize Crosstalk Interference in a Hopfield Network?",
+    options: [
+      "The magnitude of each pattern must be zero (S_i = 0).",
+      "Patterns must be Orthogonal to each other (S_i · S_j = 0).",
+      "All bits in the pattern vector must be +1.",
+      "The dot product sum of all patterns must be maximized."
+    ],
+    type: "single",
+    correct: [1],
+    explanation: "Orthogonality (S_i · S_j = 0) prevents overlapping terms in weight projections, minimizing crosstalk."
+  },
+  {
+    difficulty: "hard",
+    text: "(MSQ — more than one option is correct) Which of the following statements regarding Hopfield Network Limitations and Memory Dynamics are CORRECT?",
+    type: "multi",
+    options: [
+      "For every stored pattern S, its exact inverse −S also automatically becomes a stable state (spurious state).",
+      "Crosstalk interference severely increases when the stored patterns exceed 0.138N.",
+      "In synchronous update mode, energy is guaranteed to strictly decrease monotonically at every single step.",
+      "Storing highly correlated (similar) patterns causes interference, preventing the network from accurate recall."
+    ],
+    correct: [0,1,3],
+    explanation: "(A) Due to weight symmetry, state inversion yields identical energy. (B) Exceeding 0.138N capacity introduces cross-pattern interference. (D) Correlated, non-orthogonal patterns blur energy minima boundaries."
+  }
+];
+
+const QUIZ_DURATION_SECONDS = 15 * 60;
+
+let userName = "";
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null).map(() => []);
+let timeLeft = QUIZ_DURATION_SECONDS;
+let timerInterval = null;
+
+function formatTime(sec){
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = QUIZ_DURATION_SECONDS;
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const el = document.getElementById('timerDisplay');
+    if(el){
+      el.textContent = formatTime(timeLeft);
+      const box = document.getElementById('timerBox');
+      box.classList.remove('warn','danger');
+      if(timeLeft <= 60) box.classList.add('danger');
+      else if(timeLeft <= 300) box.classList.add('warn');
+    }
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      renderResult();
+    }
+  }, 1000);
+}
+
+const panel = document.getElementById('panel');
+
+function renderIntro(){
+  panel.innerHTML = `
+    <div class="kicker">Group-1 Presents</div>
+    <h1>Associative Memory &amp; Hetero-Associative Neural Networks</h1>
+    <p class="subtext">A 10-question test series moving from foundational recall concepts to Hopfield network computation. You will have 15 minutes to complete it.</p>
+    <label class="field-label" for="nameInput">Enter your name to begin</label>
+    <input type="text" id="nameInput" placeholder="e.g. Abhiranjan Kumar" autocomplete="off">
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startBtn" disabled>Start Quiz</button>
+    </div>
+  `;
+  const nameInput = document.getElementById('nameInput');
+  const startBtn = document.getElementById('startBtn');
+  nameInput.addEventListener('input', () => {
+    startBtn.disabled = nameInput.value.trim().length === 0;
+  });
+  nameInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && nameInput.value.trim().length > 0) startQuiz();
+  });
+  startBtn.addEventListener('click', startQuiz);
+
+  function startQuiz(){
+    userName = nameInput.value.trim();
+    current = 0;
+    answers = new Array(QUESTIONS.length).fill(null).map(() => []);
+    startTimer();
+    renderQuestion();
+  }
+}
+
+function matrixHTML(){
+  return `
+    <div class="matrix-box">
+      <div class="mlabel">W (Weight Matrix)</div>
+      <table>
+        <tr><td>0</td><td>1</td><td>-1</td><td>-1</td></tr>
+        <tr><td>1</td><td>0</td><td>-1</td><td>-1</td></tr>
+        <tr><td>-1</td><td>-1</td><td>0</td><td>1</td></tr>
+        <tr><td>-1</td><td>-1</td><td>1</td><td>0</td></tr>
+      </table>
+      <div class="mlabel" style="margin-top:10px;">X_prompt = [ 1, -1, -1, -1 ]</div>
+    </div>
+  `;
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[current];
+  const pct = ((current) / QUESTIONS.length) * 100;
+  const isMulti = q.type === 'multi';
+
+  panel.innerHTML = `
+    <div class="quiz-header">
+      <span class="qcount">Question ${current+1} of ${QUESTIONS.length}</span>
+      <span style="display:flex; gap:10px; align-items:center;">
+        <span class="difficulty-pill ${q.difficulty}">${q.difficulty.charAt(0).toUpperCase()+q.difficulty.slice(1)}</span>
+        <span class="timer" id="timerBox"><span class="timer-dot"></span><span id="timerDisplay">${formatTime(timeLeft)}</span></span>
+      </span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="qtext">${q.text}</div>
+    ${q.matrix ? matrixHTML() : ''}
+    ${isMulti ? '<div class="msq-hint">Select all that apply</div>' : ''}
+    <div class="options" id="optionsWrap"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="backBtn" ${current===0 ? 'disabled' : ''}>Back</button>
+      <button class="btn btn-primary" id="nextBtn" disabled>${current === QUESTIONS.length-1 ? 'Finish' : 'Next'}</button>
+    </div>
+  `;
+
+  const wrap = document.getElementById('optionsWrap');
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (isMulti ? ' msq' : '');
+    if(answers[current].includes(i)) div.classList.add('selected');
+    div.innerHTML = `<span class="marker">${answers[current].includes(i) ? '✓' : ''}</span><span><span class="option-letter">${letters[i]})</span> ${opt}</span>`;
+    div.addEventListener('click', () => {
+      if(isMulti){
+        const idx = answers[current].indexOf(i);
+        if(idx > -1) answers[current].splice(idx,1);
+        else answers[current].push(i);
+      } else {
+        answers[current] = [i];
+      }
+      renderQuestion();
+    });
+    wrap.appendChild(div);
+  });
+
+  document.getElementById('nextBtn').disabled = answers[current].length === 0;
+  document.getElementById('backBtn').addEventListener('click', () => {
+    if(current > 0){ current--; renderQuestion(); }
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if(current < QUESTIONS.length - 1){ current++; renderQuestion(); }
+    else { clearInterval(timerInterval); renderResult(); }
+  });
+}
+
+function computeScore(){
+  let score = 0;
+  QUESTIONS.forEach((q, i) => {
+    const given = answers[i].slice().sort();
+    const correct = q.correct.slice().sort();
+    if(given.length === correct.length && given.every((v,idx) => v === correct[idx])){
+      score++;
+    }
+  });
+  return score;
+}
+
+function renderResult(){
+  clearInterval(timerInterval);
+  const score = computeScore();
+  let verdictClass, verdictText, funnyText, showCertificate, certLabel;
+
+  if(score === 10){
+    verdictClass = 'great';
+    verdictText = 'Outstanding!';
+    funnyText = "Perfect recall — better than a Hopfield network at 0.138N capacity.";
+    showCertificate = true;
+    certLabel = 'Certificate of Outstanding Achievement';
+  } else if(score > 8){
+    verdictClass = 'great';
+    verdictText = 'Excellent Work';
+    funnyText = "Right at the edge of the energy minimum — well done.";
+    showCertificate = true;
+    certLabel = 'Certificate of Completion';
+  } else if(score >= 6){
+    verdictClass = 'ok';
+    verdictText = 'Good Effort';
+    funnyText = "Stable, but not fully converged yet — revise and try again.";
+    showCertificate = false;
+  } else {
+    verdictClass = 'low';
+    verdictText = 'Not Satisfactory';
+    funnyText = "Kal se tum aage baithoge... padhte nhi ho! 😄";
+    showCertificate = false;
+  }
+
+  let certHTML = '';
+  if(showCertificate){
+    const today = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+    certHTML = `
+      <div class="certificate">
+        <div class="cert-eyebrow">Group-1 Test Series</div>
+        <div class="cert-title">${certLabel}</div>
+        <div class="cert-sub">is proudly presented to</div>
+        <div class="cert-name">${escapeHTML(userName)}</div>
+        <div class="cert-body">for scoring ${score} out of ${QUESTIONS.length} in the quiz on</div>
+        <div class="cert-topic">Associative Memory Networks &amp; Hetero-Associative Neural Networks</div>
+        <div class="cert-footer">
+          <span>Date: ${today}</span>
+          <span>Issued by Group-1</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const letters = ['A','B','C','D'];
+  const ansKeyHTML = QUESTIONS.map((q, i) => {
+    const correctLabels = q.correct.map(c => letters[c]).join(', ');
+    return `
+      <div class="ak-item">
+        <div class="ak-top">
+          <span class="ak-qno">Q${i+1}</span>
+          <span class="ak-answer">${correctLabels}</span>
+        </div>
+        <div class="ak-explain">${q.explanation}</div>
+      </div>
+    `;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="score-hero">
+      <div class="score-big">${score}</div>
+      <div class="score-of">out of ${QUESTIONS.length}</div>
+    </div>
+    <div class="verdict ${verdictClass}">${verdictText}</div>
+    <div class="funny">${funnyText}</div>
+    ${certHTML}
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn btn-ghost" id="retryBtn">Retake Quiz</button>
+    </div>
+    <div class="answer-key">
+      <div class="ak-heading">Answer Key &amp; Explanations</div>
+      ${ansKeyHTML}
+    </div>
+  `;
+
+  document.getElementById('retryBtn').addEventListener('click', renderIntro);
+
+  if(showCertificate){
+    celebrate();
+  }
+}
+
+function escapeHTML(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------- Celebration FX: crackers, fireworks, flying flowers ---------------- */
+
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playCrackerPop(delay){
+  const ctx = getAudioCtx();
+  const t0 = ctx.currentTime + delay;
+
+  // sharp noise burst = cracker "bang"
+  const bufferSize = ctx.sampleRate * 0.18;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){
+    data[i] = (Math.random()*2 - 1) * Math.pow(1 - i/bufferSize, 3);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 1200 + Math.random()*1400;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.55, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+  noise.connect(noiseFilter).connect(gain).connect(ctx.destination);
+  noise.start(t0);
+  noise.stop(t0 + 0.2);
+
+  // whistle/whoosh rising tone before the pop (firework launch)
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  const oscGain = ctx.createGain();
+  osc.frequency.setValueAtTime(400, t0 - 0.15);
+  osc.frequency.exponentialRampToValueAtTime(1400, t0);
+  oscGain.gain.setValueAtTime(0.001, t0 - 0.15);
+  oscGain.gain.exponentialRampToValueAtTime(0.12, t0 - 0.02);
+  oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.05);
+  osc.connect(oscGain).connect(ctx.destination);
+  osc.start(t0 - 0.15);
+  osc.stop(t0 + 0.1);
+}
+
+function playCheer(){
+  // ascending triumphant chime to stand in for a crowd shout/tada
+  const ctx = getAudioCtx();
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    const t0 = ctx.currentTime + i*0.09;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.45);
+  });
+}
+
+function playCelebrationSound(){
+  try{
+    playCheer();
+    for(let i=0;i<6;i++){
+      playCrackerPop(0.3 + i*0.35 + Math.random()*0.15);
+    }
+  } catch(e){ /* audio blocked — visuals still play */ }
+}
+
+function launchConfetti(){
+  let canvas = document.getElementById('fxCanvas');
+  if(canvas) canvas.remove();
+  canvas = document.createElement('canvas');
+  canvas.id = 'fxCanvas';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#57e0c9', '#e8b84b', '#e2685f', '#8ab6ff', '#ffffff'];
+  const flowers = ['🌸','🌼','🌺','🎉','✨'];
+  const particles = [];
+
+  for(let i=0;i<70;i++){
+    particles.push({
+      type: 'confetti',
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*canvas.height*0.5,
+      vx: (Math.random()-0.5)*2.5,
+      vy: 2 + Math.random()*3,
+      size: 6 + Math.random()*6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rotation: Math.random()*360,
+      spin: (Math.random()-0.5)*10
+    });
+  }
+  for(let i=0;i<24;i++){
+    particles.push({
+      type: 'flower',
+      x: Math.random()*canvas.width,
+      y: -20 - Math.random()*canvas.height*0.5,
+      vx: (Math.random()-0.5)*1.8,
+      vy: 1.2 + Math.random()*2,
+      size: 18 + Math.random()*14,
+      emoji: flowers[Math.floor(Math.random()*flowers.length)],
+      rotation: Math.random()*360,
+      spin: (Math.random()-0.5)*6
+    });
+  }
+
+  const bursts = [];
+  for(let i=0;i<5;i++){
+    bursts.push({
+      x: canvas.width*(0.15 + Math.random()*0.7),
+      y: canvas.height*(0.1 + Math.random()*0.35),
+      t: 300 + i*450,
+      done:false
+    });
+  }
+
+  const startTime = performance.now();
+  const duration = 4200;
+
+  function drawBurst(b, elapsed){
+    const age = elapsed - b.t;
+    if(age < 0 || age > 700) return;
+    const progress = age / 700;
+    const radius = progress * 90;
+    const alpha = 1 - progress;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = colors[Math.floor((b.t/450))%colors.length];
+    ctx.lineWidth = 2;
+    for(let i=0;i<16;i++){
+      const angle = (i/16) * Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x + Math.cos(angle)*radius, b.y + Math.sin(angle)*radius);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function frame(now){
+    const elapsed = now - startTime;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    bursts.forEach(b => drawBurst(b, elapsed));
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.spin;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI/180);
+      if(p.type === 'confetti'){
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+      } else {
+        ctx.font = `${p.size}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.emoji, 0, 0);
+      }
+      ctx.restore();
+    });
+
+    if(elapsed < duration){
+      requestAnimationFrame(frame);
+    } else {
+      canvas.style.transition = 'opacity 0.6s';
+      canvas.style.opacity = '0';
+      setTimeout(() => canvas.remove(), 650);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function celebrate(){
+  playCelebrationSound();
+  launchConfetti();
+}
+
+renderIntro();
+</script>
+
+</body>
+</html>
